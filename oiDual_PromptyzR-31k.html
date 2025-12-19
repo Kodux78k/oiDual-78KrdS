@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>WarpVault9 · Hub1</title>
+
+  <!-- PWA / Assets (paths relativos com ./ conforme pedido) -->
+  <link rel="manifest" href="./manifest.web.manifest" />
+  <link rel="icon" href="./icone-192.png" />
+  <meta name="theme-color" content="#000000" />
+
+  <!-- Tailwind opcional (mantive referência pra utilidades rápidas) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register("./sw.js").catch(e => console.warn('SW fail', e));
+      });
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+    :root{
+      --bg: rgba(0,0,0,0.01); /* fundo quase vazio */
+      --glass: rgba(30,30,30,0.38);
+      --border: rgba(255,255,255,0.06);
+
+      --neon-p: #d946ef;
+      --neon-o: #f97316;
+      --neon-b: #3b82f6;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+    }
+
+    html,body{height:100%;margin:0;padding:0;background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;}
+    .app-wrap{max-width:980px;margin:18px auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+
+    /* HEADER / CONTROLES */
+    .topbar{display:flex;align-items:center;gap:8px;justify-content:space-between}
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04);padding:8px 10px;border-radius:10px;cursor:pointer;font-size:13px;color:var(--text);display:inline-flex;align-items:center;gap:8px}
+    .btn:hover{transform:translateY(-2px);background:rgba(255,255,255,0.05)}
+    .mode-active{box-shadow:0 6px 18px rgba(0,0,0,0.6);border-color:rgba(99,102,241,0.25)}
+
+    .filter-bar{display:flex;gap:8px;overflow:auto;padding-bottom:6px}
+    .filter-pill{padding:6px 12px;border-radius:16px;background:var(--glass);border:1px solid var(--border);font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+    .filter-pill.active{background:var(--neon-p);color:#fff;border-color:var(--neon-p)}
+
+    /* CARDS */
+    .cards{display:flex;flex-direction:column;gap:12px}
+    .master-card{
+      width:100%;max-width:720px;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      border-radius:18px;border:1px solid var(--border);overflow:hidden;padding:12px;box-shadow:0 8px 28px rgba(0,0,0,0.6);
+      transition:transform .18s ease,box-shadow .18s ease;
+    }
+    .master-card:hover{transform:translateY(-4px)}
+    .card-header{display:flex;align-items:center;gap:12px;justify-content:space-between}
+    .title-group{display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0}
+    .card-title{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card-meta{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+    .dock{display:flex;gap:8px;align-items:center}
+
+    .ico{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);cursor:pointer}
+    .ico:hover{transform:scale(1.06);background:rgba(255,255,255,0.04)}
+
+    .content-box{max-height:0;overflow:hidden;opacity:0;transition:all .28s cubic-bezier(.2,.9,.2,1);margin-top:0}
+    .expanded .content-box{max-height:1000px;opacity:1;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+
+    .code-area{width:100%;min-height:100px;background:rgba(0,0,0,0.22);border-radius:10px;padding:10px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;color:var(--text);resize:vertical}
+    .small{font-size:12px;padding:6px 8px}
+
+    .warframe-view{width:100%;height:220px;border-radius:10px;border:1px solid var(--border);margin-top:8px}
+
+    /* presets via data-style */
+    .master-card[data-style="blue"]{--glass:rgba(12,20,46,0.48);--neon-b:#4ea8ff}
+    .master-card[data-style="purple"]{--glass:rgba(35,12,45,0.45);--neon-p:#a855f7}
+    .master-card[data-style="glass"]{--glass:rgba(255,255,255,0.02);--neon-o:#f97316}
+    .master-card[data-style="minimal"]{--glass:rgba(10,10,10,0.18);box-shadow:none;border-radius:12px}
+    .master-card[data-style="cyber"]{--glass:linear-gradient(180deg, rgba(20,20,40,0.5), rgba(10,10,30,0.4));--neon-b:#00f5ff;--neon-p:#ff4dff}
+
+    /* log panel */
+    .log-panel{background:rgba(0,0,0,0.24);border-radius:10px;padding:8px;border:1px solid var(--border);margin-top:8px;max-height:220px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+
+    /* responsive */
+    @media (max-width:720px){ .app-wrap{padding:12px} .master-card{padding:10px} .ico{width:34px;height:34px} }
+  </style>
+</head>
+<body>
+  <div class="app-wrap">
+    <div class="topbar">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="display:flex;align-items:center;gap:8px">
+            <!-- SVG Raio minimal -->
+            <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0ea5e9,#a78bfa);display:flex;align-items:center;justify-content:center">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:800">WarpVault9</div>
+              <div style="font-size:12px;color:var(--muted)">Hub1 · KOBLLUX · v9</div>
+            </div>
+          </div>
+
+          <div style="margin-left:12px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn" id="btnGlobalPaste" title="Colar do Clipboard e criar card (Ctrl+V)">
+                <!-- paste SVG -->
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="8" height="4"></rect><path d="M5 6h14v14H5z"></path></svg>
+                Colar & Criar
+              </button>
+
+              <div class="btn" id="presetSelector" title="Preset de estilo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle></svg>
+                <select id="presetSelect" style="background:transparent;border:none;color:var(--text);font-weight:700" class="small">
+                  <option value="purple">Purple</option>
+                  <option value="blue">Blue</option>
+                  <option value="glass">Glass</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="cyber">Cyber</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="filter-bar" id="filterBar">
+            <div class="filter-pill active" onclick="filterVault('ALL', event)">ALL</div>
+            <div class="filter-pill" onclick="filterVault('CODE', event)">CODE</div>
+            <div class="filter-pill" onclick="filterVault('DOCS', event)">DOCS</div>
+            <div class="filter-pill" onclick="filterVault('CLIPBOARD', event)">CLIPBOARD</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="modeDuoBtn" title="DUO - Funcionalidades automáticas">DUO</button>
+        <button class="btn" id="modeTrinityBtn" title="TRINITY - CSS isolado por card">TRINITY</button>
+        <button class="btn" onclick="exportVault()" title="Exportar JSON">Export</button>
+        <button class="btn" onclick="importVault()" title="Importar JSON">Import</button>
+      </div>
+    </div>
+
+    <!-- MAIN CARD -->
+    <div class="master-card" id="mainCard" data-style="purple">
+      <div class="card-header">
+        <div class="title-group" onclick="toggle('mainCard')">
+          <div class="card-title">INFINITY INJECTOR</div>
+          <div class="card-meta">Warframe Ready · Crie, injete e compartilhe</div>
+        </div>
+
+        <div class="dock">
+          <div class="ico" onclick="magicPaste()" title="Criar a partir do clipboard">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="8" height="4"></rect><path d="M5 6h14v14H5z"></path></svg>
+          </div>
+          <div class="ico" onclick="toggle('mainCard')" title="Expandir">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-box">
+        <div style="display:flex;gap:8px;flex-direction:column">
+          <textarea id="mainInput" class="code-area" placeholder="Cole código, HTML ou texto aqui..."></textarea>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="mainTitle" placeholder="Título (opcional)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text)">
+            <input id="mainGroup" placeholder="Grupo (ex: DOCS)" style="width:160px;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text)">
+            <select id="mainStyle" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+              <option value="purple">purple</option>
+              <option value="blue">blue</option>
+              <option value="glass">glass</option>
+              <option value="minimal">minimal</option>
+              <option value="cyber">cyber</option>
+            </select>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn" onclick="pasteToInput()">Colar na Caixa</button>
+            <button class="btn" onclick="saveManual()">Salvar Card</button>
+            <button class="btn" onclick="injectExternal()">Injetar Fora (Visual)</button>
+            <button class="btn" onclick="clearMain()">Limpar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- External injected area -->
+    <div id="ext-layer"></div>
+
+    <!-- CARDS VAULT -->
+    <div class="cards" id="vault"></div>
+  </div>
+
+  <script>
+    /* ---------- Estado e inicialização ---------- */
+    let items = JSON.parse(localStorage.getItem('vault_v9') || '[]');
+    let currentFilter = 'ALL';
+    let editingId = null;
+    let appMode = localStorage.getItem('warp_mode') || 'UNO'; // UNO | DUO | TRINITY
+
+    // Aplicar UI inicial do modo
+    function setModeUI() {
+      document.getElementById('modeDuoBtn').classList.toggle('mode-active', appMode === 'DUO');
+      document.getElementById('modeTrinityBtn').classList.toggle('mode-active', appMode === 'TRINITY');
+    }
+    setModeUI();
+
+    document.getElementById('modeDuoBtn').addEventListener('click', () => {
+      appMode = appMode === 'DUO' ? 'UNO' : 'DUO';
+      localStorage.setItem('warp_mode', appMode);
+      setModeUI();
+    });
+    document.getElementById('modeTrinityBtn').addEventListener('click', () => {
+      appMode = appMode === 'TRINITY' ? 'UNO' : 'TRINITY';
+      localStorage.setItem('warp_mode', appMode);
+      setModeUI();
+    });
+
+    /* keyboard paste to create card (Ctrl/Cmd+V) */
+    window.addEventListener('paste', async (e) => {
+      // if focused on input -> let it paste normally
+      const active = document.activeElement;
+      if(active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT')) return;
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      if(text && text.trim()) {
+        createCardFromClipboard(text);
+      }
+    });
+
+    /* ---------- Render ---------- */
+    function render() {
+      const vault = document.getElementById('vault');
+      const filtered = currentFilter === 'ALL' ? items : items.filter(i => (i.group||'').toUpperCase() === currentFilter);
+      vault.innerHTML = filtered.map(i => renderCardHTML(i)).join('');
+      // reattach dynamic listeners (delegation used for some)
+    }
+
+    function renderCardHTML(i){
+      const safeContent = escapeHtml(i.content || '');
+      const title = i.title || (safeContent.split('\n')[0] || 'Sem Título').slice(0,60);
+      const date = i.date || '';
+      const groupBadge = i.group ? `<span class="card-meta" style="margin-left:6px"><span style="background:rgba(255,255,255,0.04);padding:2px 6px;border-radius:6px;font-weight:700">${escapeHtml(i.group)}</span></span>` : '';
+      const styleAttr = `data-style="${i.style||'purple'}"`;
+
+      // logs preview: last 3
+      const logsHtml = (i.logs||[]).slice(-6).reverse().map(l => `<div style="padding:4px 0;border-bottom:1px dashed rgba(255,255,255,0.02)">${escapeHtml(l.ts)} — ${escapeHtml(l.msg)}</div>`).join('');
+      const logPanel = `<div id="log-${i.id}" class="log-panel" style="display:none">${logsHtml || '<div style="opacity:.6">Sem logs</div>'}</div>`;
+
+      return `
+        <div class="master-card" id="card-${i.id}" ${styleAttr}>
+          <div class="card-header">
+            <div class="title-group" onclick="toggle('card-${i.id}')">
+              <div class="card-title">${title}</div>
+              <div class="card-meta">${date} ${groupBadge} <span style="margin-left:8px;color:var(--muted)">ID:${String(i.id).slice(-6)}</span></div>
+            </div>
+
+            <div class="dock">
+              <div class="ico" title="TTS" onclick="event.stopPropagation(); speakCard(${i.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10H3z"></path></svg>
+              </div>
+
+              <div class="ico" title="Compartilhar" onclick="event.stopPropagation(); shareCard(${i.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              </div>
+
+              <div class="ico" title="Renderizar (Warframe)" onclick="event.stopPropagation(); toggleRender(${i.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              </div>
+
+              <div class="ico" title="Editar" onclick="event.stopPropagation(); startEdit(${i.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+              </div>
+
+              <div class="ico" title="Log" onclick="event.stopPropagation(); toggleLog(${i.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
+              </div>
+
+              <div class="ico" title="Excluir" onclick="event.stopPropagation(); deleteCard(${i.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-box" id="box-${i.id}">
+            <textarea readonly class="code-area" id="txt-${i.id}" style="border:none;padding:0;background:transparent;margin-top:10px">${safeContent}</textarea>
+            <div id="frame-container-${i.id}" style="display:none;margin-top:8px"></div>
+            ${logPanel}
+            <!-- EDIT AREA (hidden) -->
+            <div id="edit-area-${i.id}" style="display:none;margin-top:8px">
+              <input id="edit-title-${i.id}" value="${escapeAttr(i.title||'')}" placeholder="Título" class="small" style="width:100%;margin-bottom:6px;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+              <textarea id="edit-content-${i.id}" class="code-area">${safeContent}</textarea>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <input id="edit-group-${i.id}" value="${escapeAttr(i.group||'')}" class="small" placeholder="Grupo" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+                <select id="edit-style-${i.id}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+                  <option value="purple"${i.style==='purple'?' selected':''}>purple</option>
+                  <option value="blue"${i.style==='blue'?' selected':''}>blue</option>
+                  <option value="glass"${i.style==='glass'?' selected':''}>glass</option>
+                  <option value="minimal"${i.style==='minimal'?' selected':''}>minimal</option>
+                  <option value="cyber"${i.style==='cyber'?' selected':''}>cyber</option>
+                </select>
+                <button class="btn" onclick="saveEdit(${i.id})">Salvar</button>
+                <button class="btn" onclick="cancelEdit(${i.id})">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Helper escape
+    function escapeHtml(str){
+      if(!str && str !== '') return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function escapeAttr(str){
+      if(!str && str !== '') return '';
+      return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    /* ---------- Toggle expand / edit / logs ---------- */
+    function toggle(id){
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.classList.toggle('expanded');
+    }
+
+    function toggleLog(id){
+      const panel = document.getElementById(`log-${id}`);
+      if(!panel) return;
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      // ensure box is expanded
+      const box = document.getElementById(`box-${id}`);
+      if(box && panel.style.display === 'block') box.parentElement.classList.add('expanded');
+    }
+
+    /* ---------- CRUD & actions ---------- */
+    function save(){
+      localStorage.setItem('vault_v9', JSON.stringify(items));
+      render();
+    }
+
+    function createCard(content, group = '', title = '', style = null){
+      const t = title || (content.split('\n')[0] || 'Sem Título').slice(0,60);
+      const it = {
+        id: Date.now(),
+        title: t,
+        content,
+        group: group.toUpperCase ? group.toUpperCase() : String(group||''),
+        style: style || document.getElementById('presetSelect').value || 'purple',
+        date: new Date().toLocaleString('pt-BR').slice(0,16),
+        logs: []
+      };
+      items.unshift(it);
+      addLog(it.id, 'Card criado');
+      // DUO mode: falar automaticamente
+      if(appMode === 'DUO') {
+        speak(it.content);
+        addLog(it.id, 'TTS automático (DUO)');
+      }
+      save();
+      return it;
+    }
+
+    function createCardFromClipboard(text){
+      createCard(text, 'CLIPBOARD', '', document.getElementById('presetSelect').value || 'purple');
+    }
+
+    async function magicPaste(){
+      try{
+        const text = await navigator.clipboard.readText();
+        if(!text) return alert('Clipboard vazio');
+        const it = createCard(text, 'CLIPBOARD', '', document.getElementById('presetSelect').value || 'purple');
+        speak('Card criado a partir do clipboard');
+        // trigger visual inject if user prefers
+        if(confirm('Deseja exibir o card externamente?')) injectExternalFromItem(it.id);
+      }catch(e){
+        alert('Permissão para acessar clipboard negada');
+      }
+    }
+
+    async function pasteToInput(){
+      try{
+        const t = await navigator.clipboard.readText();
+        document.getElementById('mainInput').value += t;
+      }catch(e){
+        alert('Permissão negada');
+      }
+    }
+
+    function saveManual(){
+      const content = document.getElementById('mainInput').value || '';
+      const group = document.getElementById('mainGroup').value || '';
+      const title = document.getElementById('mainTitle').value || '';
+      const style = document.getElementById('mainStyle').value || document.getElementById('presetSelect').value;
+      if(!content.trim()) return alert('Conteúdo vazio');
+      createCard(content, group, title, style);
+      document.getElementById('mainInput').value = '';
+      document.getElementById('mainGroup').value = '';
+      document.getElementById('mainTitle').value = '';
+      addLog(null, 'Salvar manual executado');
+    }
+
+    function injectExternal(){
+      const val = document.getElementById('mainInput').value || '';
+      if(!val.trim()) return alert('Nada para injetar');
+      const title = (document.getElementById('mainTitle').value || val.split('\n')[0]).slice(0,30);
+      const style = document.getElementById('mainStyle').value || 'purple';
+      const d = document.createElement('div');
+      d.className = 'master-card ext-card-wrap';
+      d.setAttribute('data-style', style);
+      d.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:800">${escapeHtml(title)}</div>
+          <div style="display:flex;gap:8px">
+            <div class="ico" onclick="this.closest('.ext-card-wrap').remove()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(val)}</div>
+      `;
+      document.getElementById('ext-layer').appendChild(d);
+      document.getElementById('mainInput').value = '';
+    }
+
+    function injectExternalFromItem(id){
+      const it = items.find(x => x.id === id);
+      if(!it) return;
+      const d = document.createElement('div');
+      d.className = 'master-card ext-card-wrap';
+      d.setAttribute('data-style', it.style || 'purple');
+      d.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:800">${escapeHtml(it.title)}</div>
+          <div style="display:flex;gap:8px">
+            <div class="ico" onclick="this.closest('.ext-card-wrap').remove()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:var(--muted);font-size:13px">${escapeHtml(it.content)}</div>
+      `;
+      document.getElementById('ext-layer').appendChild(d);
+      addLog(id, 'Injetado externamente (visual)');
+    }
+
+    function startEdit(id){
+      editingId = id;
+      render();
+      // show edit area
+      const edit = document.getElementById(`edit-area-${id}`);
+      if(edit) edit.style.display = 'block';
+      const box = document.getElementById(`box-${id}`);
+      if(box) box.parentElement.classList.add('expanded');
+    }
+
+    function cancelEdit(id){
+      editingId = null;
+      render();
+    }
+
+    function saveEdit(id){
+      const item = items.find(i => i.id === id);
+      if(!item) return;
+      const newTitle = document.getElementById(`edit-title-${id}`).value || item.title;
+      const newContent = document.getElementById(`edit-content-${id}`).value || item.content;
+      const newGroup = document.getElementById(`edit-group-${id}`).value || item.group;
+      const newStyle = document.getElementById(`edit-style-${id}`).value || item.style;
+      item.title = newTitle;
+      item.content = newContent;
+      item.group = newGroup.toUpperCase();
+      item.style = newStyle;
+      item.date = new Date().toLocaleString('pt-BR').slice(0,16) + ' (Edit)';
+      addLog(item.id, 'Editado');
+      editingId = null;
+      save();
+    }
+
+    function deleteCard(id){
+      if(!confirm('Deletar Card?')) return;
+      items = items.filter(i => i.id !== id);
+      save();
+    }
+
+    function shareCard(id){
+      const it = items.find(i => i.id === id);
+      if(!it) return;
+      if(navigator.share){
+        navigator.share({title: it.title, text: it.content}).catch(()=>{});
+      } else {
+        navigator.clipboard.writeText(it.content).then(()=>alert('Conteúdo copiado (fallback)'));
+      }
+      addLog(id, 'Compartilhado');
+    }
+
+    function speakCard(id){
+      const it = items.find(i => i.id === id);
+      if(!it) return;
+      speak(it.content);
+      addLog(id, 'TTS manual');
+    }
+
+    function speak(txt){
+      try{
+        if(!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'pt-BR';
+        u.rate = 1.05;
+        window.speechSynthesis.speak(u);
+      }catch(e){ console.warn('TTS err', e) }
+    }
+
+    function toggleRender(id){
+      const frameBox = document.getElementById(`frame-container-${id}`);
+      const txt = document.getElementById(`txt-${id}`);
+      const it = items.find(x => x.id === id);
+      if(!it) return;
+      if(frameBox.style.display === 'block'){
+        frameBox.style.display = 'none';
+        frameBox.innerHTML = '';
+        txt.style.display = 'block';
+      } else {
+        txt.style.display = 'none';
+        frameBox.style.display = 'block';
+        // TRINITY: allow injection of per-card CSS wrapper
+        let srcdoc = it.content;
+        if(appMode === 'TRINITY' && it.cardCSS){
+          // wrap content in style tag
+          srcdoc = `<style>${it.cardCSS}</style>\n` + srcdoc;
+        }
+        frameBox.innerHTML = `<iframe class="warframe-view" sandbox="allow-scripts allow-modals" srcdoc="${srcdoc.replace(/"/g,'&quot;')}"></iframe>`;
+        addLog(id, 'Renderizado (Warframe)');
+      }
+    }
+
+    /* ---------- Filtering ---------- */
+    function filterVault(filter, e){
+      currentFilter = filter;
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      if(e && e.currentTarget) e.currentTarget.classList.add('active');
+      else {
+        Array.from(document.querySelectorAll('.filter-pill')).find(p => p.textContent === filter)?.classList.add('active');
+      }
+      render();
+    }
+
+    /* ---------- Logs per-card ---------- */
+    function addLog(id, msg){
+      const ts = new Date().toLocaleString('pt-BR').slice(0,16);
+      if(id){
+        const it = items.find(i => i.id === id);
+        if(!it) return;
+        it.logs = it.logs || [];
+        it.logs.push({ts,msg});
+      } else {
+        // global log (store in localStorage separately)
+        const gl = JSON.parse(localStorage.getItem('vault_logs') || '[]');
+        gl.push({ts,msg});
+        localStorage.setItem('vault_logs', JSON.stringify(gl));
+      }
+      save();
+    }
+
+    /* ---------- Export / Import ---------- */
+    function exportVault(){
+      const data = {items, mode: appMode};
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'warpvault9-export.json'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importVault(){
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = 'application/json';
+      inp.onchange = (e) => {
+        const f = e.target.files[0];
+        if(!f) return;
+        const fr = new FileReader();
+        fr.onload = () => {
+          try{
+            const data = JSON.parse(fr.result);
+            if(Array.isArray(data.items)) items = data.items.concat(items);
+            if(data.mode) { appMode = data.mode; localStorage.setItem('warp_mode', appMode); setModeUI(); }
+            save();
+            alert('Importado');
+          }catch(err){ alert('Arquivo inválido') }
+        }
+        fr.readAsText(f);
+      };
+      inp.click();
+    }
+
+    /* ---------- Utility: clear main ---------- */
+    function clearMain(){
+      document.getElementById('mainInput').value = '';
+      document.getElementById('mainTitle').value = '';
+      document.getElementById('mainGroup').value = '';
+    }
+
+    /* ---------- Global paste button ---------- */
+    document.getElementById('btnGlobalPaste').addEventListener('click', async () => {
+      try{
+        const t = await navigator.clipboard.readText();
+        if(!t) return alert('Clipboard vazio');
+        createCard(t, 'CLIPBOARD', '', document.getElementById('presetSelect').value || 'purple');
+      }catch(e){ alert('Permissão de clipboard negada') }
+    });
+
+    /* ---------- Create on DOM load ---------- */
+    // fill presetSelect default
+    document.getElementById('presetSelect').value = localStorage.getItem('warp_preset') || 'purple';
+    document.getElementById('presetSelect').addEventListener('change', (e) => {
+      localStorage.setItem('warp_preset', e.target.value);
+    });
+
+    // sync presetSelect with mainStyle
+    document.getElementById('presetSelect').addEventListener('change', () => {
+      const v = document.getElementById('presetSelect').value;
+      document.getElementById('mainStyle').value = v;
+    });
+
+    // quick init render
+    render();
+
+    /* ---------- Keyboard shortcuts ---------- */
+    window.addEventListener('keydown', (e) => {
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b'){ // ctrl/cmd+B => focus main input
+        e.preventDefault();
+        document.getElementById('mainInput').focus();
+      }
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e'){ // export
+        e.preventDefault();
+        exportVault();
+      }
+    });
+
+    /* ---------- Helpers for safety & persistence ---------- */
+    function escapeForStorage(str){ return str ? String(str) : ''; }
+
+    /* ---------- Init: migrate old items to ensure logs array exist ---------- */
+    items = items.map(i => ({...i, logs: i.logs || []}));
+
+    /* ---------- Final render call ---------- */
+    render();
+  </script>
+</body>
+</html>
