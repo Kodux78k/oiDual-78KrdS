@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Dual.Infodose // v2.4.2 Masterclass</title>
+    
+
+<!-- PWA / Assets (paths relativos com ./ conforme pedido) -->
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon-192.png" />
+
+  
+  <!-- Fonts -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --bg-dark: #020408;
+            --accent-1: #4fd4ff;
+            --accent-2: #9d00ff;
+            --glass: rgba(10, 15, 25, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text: #f0f0f0;
+            --ease: cubic-bezier(0.19, 1, 0.22, 1);
+            --grad: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        }
+
+        [data-theme="madrugada"] { --accent-1: #3b82f6; --accent-2: #1d4ed8; --bg-dark: #010206; }
+        [data-theme="manha"] { --accent-1: #f59e0b; --accent-2: #ef4444; --bg-dark: #0f0a05; }
+        [data-theme="tarde"] { --accent-1: #10b981; --accent-2: #3b82f6; --bg-dark: #060a0f; }
+        [data-theme="noite"] { --accent-1: #8b5cf6; --accent-2: #ec4899; --bg-dark: #05020a; }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 1s var(--ease);
+        }
+
+        .ambient-glow { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+        .blob {
+            position: absolute; width: 80vw; height: 80vw; border-radius: 50%;
+            filter: blur(100px); opacity: 0.12;
+            animation: float 25s infinite alternate ease-in-out;
+            background: var(--grad);
+        }
+
+        @keyframes float {
+            0% { transform: translate(-10%, -10%) rotate(0deg); }
+            100% { transform: translate(20%, 20%) rotate(90deg); }
+        }
+
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        #splash {
+            position: fixed; inset: 0; z-index: 2000;
+            background: #000; display: flex; align-items: center; justify-content: center;
+        }
+        
+        #manifesto-overlay {
+            position: fixed; inset: 0; z-index: 2100;
+            background: #000; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; padding: 20px;
+        }
+
+        .fractal-canvas { 
+            font-family: 'JetBrains Mono', monospace; 
+            line-height: 1; color: var(--accent-1); 
+            text-shadow: 0 0 10px var(--accent-1);
+        }
+
+        .collapsible-container { overflow: hidden; margin-bottom: 1.5rem; transition: all 0.5s var(--ease); }
+        .collapsible-trigger { cursor: pointer; padding: 24px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .collapsible-body { max-height: 0; opacity: 0; transition: all 0.5s var(--ease); padding: 0 30px; overflow: hidden; }
+        .is-open .collapsible-body { max-height: 2000px; opacity: 1; padding-bottom: 30px; }
+        .chev { transition: transform 0.4s var(--ease); opacity: 0.3; }
+        .is-open .chev { transform: rotate(180deg); opacity: 1; color: var(--accent-1); }
+
+        .btn-dual {
+            background: var(--grad);
+            color: #000; font-weight: 800; border-radius: 16px;
+            padding: 14px; width: 100%; transition: all 0.3s var(--ease);
+            text-transform: uppercase; letter-spacing: 1px; font-size: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: none; cursor: pointer;
+        }
+        .btn-dual:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-dual:active { transform: scale(0.96); }
+        .btn-outline { background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.1); box-shadow: none; }
+
+        .input-dual {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 16px; width: 100%; color: inherit;
+            transition: all 0.3s;
+        }
+        .input-dual:focus { border-color: var(--accent-1); background: rgba(255,255,255,0.06); box-shadow: 0 0 20px rgba(79, 212, 255, 0.1); }
+
+        .sub-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px; margin-top: 10px;
+        }
+
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--glass); backdrop-filter: blur(20px);
+            padding: 12px 24px; border-radius: 50px; font-weight: 800; font-size: 10px;
+            color: var(--accent-1); text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.5s var(--ease); z-index: 3000; border: 1px solid var(--accent-1);
+        }
+        #toast.active { transform: translateX(-50%) translateY(0); }
+
+        .debate-bubble {
+            border-left: 2px solid var(--accent-1);
+            padding: 8px 12px; margin-bottom: 12px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 0 12px 12px 0;
+            animation: slideIn 0.3s var(--ease) forwards;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        .dose-card { padding: 16px; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 12px; }
+        .dose-intro { font-weight:900; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:10px; color: var(--accent-1); }
+        .dose-ascii { font-family: 'JetBrains Mono', monospace; font-size:8px; color: var(--accent-1); white-space:pre; margin-bottom:10px; opacity: 0.6; }
+        .dose-body { font-size:13px; margin-bottom:12px; line-height:1.5; opacity:0.9; color: #fff; }
+        .dose-footer { font-size:10px; opacity:0.5; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; border-top: 1px solid rgba(255,255,255,0.05); pt-3 }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+
+    <div class="ambient-glow" aria-hidden="true">
+        <div class="blob"></div>
+    </div>
+
+    <div id="splash">
+        <div class="max-w-xs w-full text-center px-6">
+            <div class="mb-8 flex justify-center">
+                <div class="w-20 h-20 glass rounded-[28px] flex items-center justify-center border-accent-1/20 border shadow-2xl">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-accent-1">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="text-3xl font-black mb-2 tracking-tighter uppercase" style="background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Infodose</h2>
+            <p class="text-[9px] font-black tracking-[0.4em] text-white/20 mb-8 uppercase">Neural Interface v2.4.2</p>
+            
+            <input id="user-input" type="text" placeholder="SEU CODINOME" class="input-dual mb-4 text-center font-bold tracking-widest text-xs uppercase" maxlength="12" />
+            <button onclick="app.initActivation()" class="btn-dual" id="btn-sync">Sincronizar Hash</button>
+        </div>
+    </div>
+
+    <div id="manifesto-overlay">
+        <div id="fractal-art" class="fractal-canvas text-[6px] md:text-[8px] mb-8 leading-[0.8] tracking-tighter"></div>
+        <div id="manifesto-text" class="text-[10px] text-white/40 uppercase tracking-[0.4em] text-center font-mono">CALIBRANDO PULSO...</div>
+    </div>
+
+    <div id="main-content" class="max-w-3xl mx-auto opacity-0 translate-y-8 transition-all duration-1000 hidden pb-24">
+        
+        <header class="flex justify-between items-center mb-8 px-2">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl border border-accent-1/20 flex items-center justify-center overflow-hidden glass">
+                    <div id="header-fractal" class="text-[3px] fractal-canvas"></div>
+                </div>
+                <span class="text-[10px] font-black tracking-[0.5em] text-white/20 uppercase">Dual.Infodose // Masterclass</span>
+            </div>
+            <div id="clock" class="font-mono text-xl font-bold opacity-40">00:00</div>
+        </header>
+
+        <section id="user-stack" class="glass rounded-[40px] collapsible-container is-open">
+            <div class="collapsible-trigger" onclick="app.toggle('user-stack')">
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-2 h-2 rounded-full bg-accent-1 shadow-[0_0_10px_var(--accent-1)] animate-pulse"></div>
+                        <span class="text-[9px] font-black text-white/40 uppercase tracking-widest">Protocolo Ativo</span>
+                    </div>
+                    <h1 class="text-2xl font-black tracking-tighter uppercase" style="font-family:'Montserrat'">
+                        <span id="display-name" style="background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">USER</span> INFODOSE
+                    </h1>
+                </div>
+                <svg class="chev w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            
+            <div class="collapsible-body">
+                <div class="sub-card p-6 mb-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-accent-1">Fluxo de Ativação</span>
+                        <button onclick="app.toggleFractalAnim()" class="p-2 bg-white/5 rounded-lg text-white/40 hover:text-white" id="btn-play">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                    </div>
+                    <div id="flow-content" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="app.startFlow('personalize')" class="btn-dual btn-outline">Personalizar</button>
+                            <button onclick="app.startFlow('archetypes')" class="btn-dual btn-outline">Arquétipos</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-6 sub-card">
+                        <label class="text-[9px] font-black text-white/20 uppercase tracking-widest block mb-4">Ciclo de Interface</label>
+                        <div class="flex gap-3 mb-4">
+                            <div onclick="app.setTheme('madrugada')" class="w-8 h-8 rounded-full bg-blue-600 cursor-pointer border-2 border-transparent hover:border-white transition-all shadow-lg"></div>
+                            <div onclick="app.setTheme('manha')" class="w-8 h-8 rounded-full bg-amber-500 cursor-pointer border-2 border-transparent hover:border-white transition-all shadow-lg"></div>
+                            <div onclick="app.setTheme('tarde')" class="w-8 h-8 rounded-full bg-emerald-500 cursor-pointer border-2 border-transparent hover:border-white transition-all shadow-lg"></div>
+                            <div onclick="app.setTheme('noite')" class="w-8 h-8 rounded-full bg-purple-600 cursor-pointer border-2 border-transparent hover:border-white transition-all shadow-lg"></div>
+                        </div>
+                    </div>
+                    <div class="p-6 sub-card flex flex-col justify-center">
+                        <span class="text-[9px] font-black text-white/20 uppercase tracking-widest block mb-4">Extração Fractal</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="app.copyFractal()" class="p-3 bg-white/5 rounded-xl text-[9px] uppercase font-bold hover:bg-white/10 transition-colors">Copiar Arte</button>
+                            <button onclick="app.copyFrames()" class="p-3 bg-white/5 rounded-xl text-[9px] uppercase font-bold hover:bg-white/10 transition-colors">Exportar Frames</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="transform-stack" class="glass rounded-[35px] collapsible-container">
+            <div class="collapsible-trigger" onclick="app.toggle('transform-stack')">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <span class="text-xs font-black uppercase tracking-[0.2em]">Painel de Síntese</span>
+                </div>
+                <svg class="chev w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div class="collapsible-body">
+                <textarea id="main-input" class="input-dual min-h-[120px] mb-4 font-mono text-xs placeholder:opacity-20 resize-none" placeholder="ENTRADA DE DADOS PARA SINTETIZAR..."></textarea>
+                <button onclick="app.process()" class="btn-dual" id="btn-sintetizar">Gerar Infodose</button>
+                <p class="text-[9px] text-white/20 mt-3 text-center uppercase tracking-widest">Aperte <span class="text-accent-1">Enter</span> para processar rápido</p>
+            </div>
+        </section>
+
+        <section id="history-stack" class="glass rounded-[35px] collapsible-container">
+            <div class="collapsible-trigger" onclick="app.toggle('history-stack')">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20v-6M9 20v-10M6 20v-4M15 20v-8M18 20v-12"/></svg>
+                    </div>
+                    <span class="text-xs font-black uppercase tracking-[0.2em]">Fluxo de Memória</span>
+                </div>
+                <svg class="chev w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div class="collapsible-body">
+                <div id="output-stream" class="space-y-4">
+                    <div class="text-center py-10 opacity-10 text-[10px] font-black uppercase tracking-widest">Interface Limpa</div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="toast">Notificação</div>
+
+    <script>
+        const app = (() => {
+            const els = {
+                splash: document.getElementById('splash'),
+                manifesto: document.getElementById('manifesto-overlay'),
+                fractalArt: document.getElementById('fractal-art'),
+                manifestoText: document.getElementById('manifesto-text'),
+                userInput: document.getElementById('user-input'),
+                mainContent: document.getElementById('main-content'),
+                displayName: document.getElementById('display-name'),
+                clock: document.getElementById('clock'),
+                toast: document.getElementById('toast'),
+                input: document.getElementById('main-input'),
+                stream: document.getElementById('output-stream'),
+                flow: document.getElementById('flow-content'),
+                btnPlay: document.getElementById('btn-play'),
+                headerFractal: document.getElementById('header-fractal')
+            };
+
+            const state = {
+                user: '',
+                hash: 0,
+                history: JSON.parse(localStorage.getItem('dual_mem_v242') || '[]'),
+                isAnimating: false,
+                frame: 0,
+                animTimer: null,
+                debateActive: false
+            };
+
+            const archetypes = [
+                { name: "O Criador", pitch: 1.2, rate: 1.1 },
+                { name: "O Mentor", pitch: 0.9, rate: 0.8 },
+                { name: "O Explorador", pitch: 1.1, rate: 1.3 },
+                { name: "O Guerreiro", pitch: 0.7, rate: 1.0 },
+                { name: "O Mago", pitch: 0.5, rate: 0.7 },
+                { name: "O Amante", pitch: 1.3, rate: 0.9 },
+                { name: "O Tolo", pitch: 1.5, rate: 1.4 },
+                { name: "O Cuidador", pitch: 1.0, rate: 0.8 },
+                { name: "O Governante", pitch: 0.8, rate: 0.9 },
+                { name: "O Inocente", pitch: 1.4, rate: 1.1 },
+                { name: "O Órfão", pitch: 0.9, rate: 1.0 },
+                { name: "O Rebelde", pitch: 0.6, rate: 1.2 }
+            ];
+
+            const generateHash = (str) => {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                return Math.abs(hash);
+            };
+
+            const getFractal = (seed, frame) => {
+                const rules = { X: "F[+X][-X]FX", Y: "F-X+F" };
+                let axiom = (seed % 2 === 0) ? "X" : "Y";
+                for(let i=0; i<3; i++) axiom = axiom.split('').map(c => rules[c] || c).join('').substring(0, 50);
+                
+                let render = "";
+                for(let y=0; y<12; y++) {
+                    for(let x=0; x<24; x++) {
+                        const idx = (x + y + frame) % axiom.length;
+                        const char = axiom[idx];
+                        if (char === 'F') render += "█";
+                        else if (char === '+') render += "/";
+                        else if (char === '-') render += "\\";
+                        else render += " ";
+                    }
+                    render += "\n";
+                }
+                return render;
+            };
+
+            const formatDose = (text) => {
+                const intro = text.split(/[.!?]/)[0].substring(0, 96);
+                const ascii = `◎─${"✦".repeat(5)}─◎\n${"• ".repeat(8)}`;
+                return `
+                    <div class="dose-card">
+                        <pre class="dose-ascii">${ascii}</pre>
+                        <span class="dose-intro">${intro}</span>
+                        <p class="dose-body">${text}</p>
+                        <div class="dose-footer">Sincronizado com o pulso de ${state.user}</div>
+                    </div>
+                `;
+            };
+
+            const speak = (txt, arch = null) => {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(txt);
+                u.lang = 'pt-BR';
+                if(arch) { u.pitch = arch.pitch; u.rate = arch.rate; }
+                window.speechSynthesis.speak(u);
+            };
+
+            return {
+                initActivation: () => {
+                    state.user = els.userInput.value.trim().toUpperCase() || 'NEBULA';
+                    state.hash = generateHash(state.user);
+                    els.splash.style.display = 'none';
+                    els.manifesto.style.display = 'flex';
+
+                    let count = 0;
+                    const interval = setInterval(() => {
+                        els.fractalArt.innerText = getFractal(state.hash, count++);
+                        els.manifestoText.innerText = `SYNCING HASH: ${state.hash.toString(16)}... ${Math.min(99, count * 4)}%`;
+                        if(count > 25) {
+                            clearInterval(interval);
+                            app.finalizeActivation();
+                        }
+                    }, 60);
+                },
+
+                finalizeActivation: () => {
+                    els.manifesto.style.opacity = '0';
+                    setTimeout(() => {
+                        els.manifesto.style.display = 'none';
+                        els.mainContent.classList.remove('hidden');
+                        setTimeout(() => els.mainContent.classList.add('opacity-100', 'translate-y-0'), 50);
+                        els.displayName.innerText = state.user;
+                        els.headerFractal.innerText = getFractal(state.hash, 0);
+                        app.updateThemeByTime();
+                        speak(`Bem-vindo, ${state.user}.`);
+                    }, 500);
+                },
+
+                startFlow: (type) => {
+                    if(type === 'personalize') {
+                        app.renderStep("ESTADO", ["Foco Total", "Exploração", "Calma", "Caos"], (val) => {
+                            app.notify(`Filtro: ${val}`);
+                            app.startFlow('main');
+                        });
+                    } else if(type === 'archetypes') {
+                        app.runDebate();
+                    } else {
+                        els.flow.innerHTML = `
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="app.startFlow('personalize')" class="btn-dual btn-outline">Personalizar</button>
+                                <button onclick="app.startFlow('archetypes')" class="btn-dual btn-outline">Arquétipos</button>
+                            </div>
+                        `;
+                    }
+                },
+
+                renderStep: (title, opts, callback) => {
+                    els.flow.innerHTML = `
+                        <p class="text-[9px] font-black uppercase tracking-widest text-accent-1 mb-3">${title}</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${opts.map(o => `<button class="btn-dual !py-2 btn-outline" onclick="this.parentElement.innerHTML=''; app.startFlow('main')">${o}</button>`).join('')}
+                        </div>
+                    `;
+                },
+
+                runDebate: () => {
+                    state.debateActive = true;
+                    els.flow.innerHTML = `<div id="debate-ui" class="max-h-[150px] overflow-y-auto text-[10px] space-y-2 mb-4"></div>
+                                         <button onclick="app.startFlow('main')" class="btn-dual btn-outline">Parar Debate</button>`;
+                    const debateUi = document.getElementById('debate-ui');
+                    const scripts = [
+                        { a: archetypes[4], t: "A realidade é maleável." },
+                        { a: archetypes[3], t: "Execute com força!" },
+                        { a: archetypes[1], t: "A paciência gera mestria." }
+                    ];
+                    let i = 0;
+                    const next = () => {
+                        if(!state.debateActive || i >= scripts.length) return;
+                        const line = scripts[i++];
+                        const div = document.createElement('div');
+                        div.className = "debate-bubble";
+                        div.innerHTML = `<span class="font-black text-accent-1">${line.a.name}:</span> ${line.t}`;
+                        debateUi.appendChild(div);
+                        speak(line.t, line.a);
+                        setTimeout(next, 3000);
+                    };
+                    next();
+                },
+
+                process: () => {
+                    const val = els.input.value.trim();
+                    if(!val) return app.notify("Entrada Vazia");
+                    const html = formatDose(val);
+                    state.history.unshift({html, time: new Date().toLocaleTimeString()});
+                    state.history = state.history.slice(0, 10);
+                    localStorage.setItem('dual_mem_v242', JSON.stringify(state.history));
+                    els.input.value = '';
+                    app.renderHistory();
+                    app.notify("Dose Gerada");
+                },
+
+                renderHistory: () => {
+                    els.stream.innerHTML = state.history.map(h => h.html).join('');
+                },
+
+                toggleFractalAnim: () => {
+                    state.isAnimating = !state.isAnimating;
+                    if(state.isAnimating) {
+                        const loop = () => {
+                            if(!state.isAnimating) return;
+                            els.headerFractal.innerText = getFractal(state.hash, state.frame++);
+                            state.animTimer = setTimeout(loop, 100);
+                        };
+                        loop();
+                    } else {
+                        clearTimeout(state.animTimer);
+                    }
+                },
+
+                setTheme: (m) => {
+                    document.documentElement.setAttribute('data-theme', m);
+                    localStorage.setItem('dual_theme_v242', m);
+                    app.notify(`Tema: ${m}`);
+                },
+
+                updateThemeByTime: () => {
+                    const h = new Date().getHours();
+                    if(h < 6) app.setTheme('madrugada');
+                    else if(h < 12) app.setTheme('manha');
+                    else if(h < 18) app.setTheme('tarde');
+                    else app.setTheme('noite');
+                },
+
+                toggle: (id) => document.getElementById(id).classList.toggle('is-open'),
+                notify: (msg) => {
+                    els.toast.innerText = msg;
+                    els.toast.classList.add('active');
+                    setTimeout(() => els.toast.classList.remove('active'), 2000);
+                },
+                copyFractal: () => {
+                    navigator.clipboard.writeText(getFractal(state.hash, state.frame));
+                    app.notify("Arte Copiada");
+                },
+                copyFrames: () => {
+                    app.notify("Frames Exportados");
+                }
+            };
+        })();
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
+        }, 1000);
+
+        document.getElementById('main-input').addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); app.process(); }
+        });
+
+        window.onload = () => {
+            const saved = JSON.parse(localStorage.getItem('dual_mem_v242') || '[]');
+            if(saved.length) {
+                document.getElementById('output-stream').innerHTML = saved.map(s => s.html || '').join('');
+            }
+        };
+    </script>
+</body>
+</html>
