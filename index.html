@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Exemplo Fusion Card — Módulo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- fonts (opcional) -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;600;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <main id="appRoot" style="min-height:100vh;"></main>
+
+  <script type="module">
+    import { mountFusionCard, unmountFusionCard } from './fusion-card.mjs';
+
+    (async ()=>{
+      try {
+        const state = await mountFusionCard(document.getElementById('appRoot'), {
+          swPath: './sw.js', // opcional: registra service worker (se existir)
+          manifestPath: './manifest.json', // opcional
+          appIcon: './icon-192.png', // opcional
+          // se quiser controlar os CDNs, passe as URLs abaixo:
+          // lucide: 'https://unpkg.com/lucide@latest',
+          // html2canvas: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+          greetings: 'Bem vindo ao Dual Fusion!'
+        });
+
+        // exemplo: setar nome programaticamente
+        // state.setUserName('KODUX');
+
+        // para desmontar:
+        // unmountFusionCard();
+
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  </script>
+</body>
+</html>
