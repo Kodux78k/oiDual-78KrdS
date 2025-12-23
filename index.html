@@ -1,526 +1,482 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Dual.Infodose // v2.4.2 Masterclass</title>
-    
+  <meta charset="utf-8" />
+  <title>DUAL — Dual Infodose — Activation Stack (Legacy 369+Colors)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#05070a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;600;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
 
 <!-- PWA / Assets (paths relativos com ./ conforme pedido) -->
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon-192.png" />
 
-  
-  <!-- Fonts -->
+  <style>
+    :root{
+      --bg-deep:#030406; --glass-surface:rgba(18,18,22,0.65); --glass-border:rgba(255,255,255,0.06);
+      --neon-cyan:#00f2ff; --neon-purple:#bd00ff; --neon-orange:#ff9a3c;
+      --font-ui:'Montserrat',sans-serif; --font-code:'JetBrains Mono',monospace;
+      --ease-elastic:cubic-bezier(0.22,1,0.36,1); --ease-smooth:cubic-bezier(0.23,1,0.32,1);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
+    body{margin:0;padding:0;min-height:100vh;background-color:var(--bg-deep);color:#fff;font-family:var(--font-ui);display:flex;align-items:center;justify-content:center;overflow:hidden;
+      background-image:linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);background-size:50px 50px;}
+    .ambient-light{position:fixed;inset:0;z-index:0;pointer-events:none}
+    .blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.12;animation:float 25s infinite alternate ease-in-out}
+    .blob-1{width:60vw;height:60vw;background:var(--neon-cyan);top:-20%;left:-20%}
+    .blob-2{width:50vw;height:50vw;background:var(--neon-purple);bottom:-20%;right:-20%;animation-delay:-5s}
+    @keyframes float{0%{transform:translate(0,0)}100%{transform:translate(40px,60px)}}
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    .container{width:100%;max-width:720px;padding:20px;z-index:10;perspective:1200px;display:flex;align-items:center;justify-content:center}
 
-    <style>
-        :root {
-            --bg-dark: #020408;
-            --accent-1: #4fd4ff;
-            --accent-2: #9d00ff;
-            --glass: rgba(10, 15, 25, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --text: #f0f0f0;
-            --ease: cubic-bezier(0.19, 1, 0.22, 1);
-            --grad: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-        }
+    /* Card */
+    .fusion-card{width:100%;max-width:520px;background:var(--glass-surface);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--glass-border);border-radius:36px;padding:30px 25px;box-shadow:0 40px 100px rgba(0,0,0,0.8);position:relative;overflow:hidden;transition:box-shadow 360ms var(--ease-smooth), transform 420ms var(--ease-smooth);opacity:0; transform:translateY(50px) scale(0.96);display:flex;flex-direction:column;gap:8px;will-change: width, padding, border-radius, box-shadow, transform;}
+    .fusion-card.active{opacity:1;transform:translateY(0) scale(1)}
+    /* widen closed preview and show small-preview */
+    .fusion-card.closed{width:320px;max-width:none;padding:14px 16px;border-radius:22px;box-shadow:0 22px 70px rgba(0,0,0,0.75);transform-origin:center;}
+    .fusion-card.closed .card-header{gap:10px;margin-bottom:0}
+    .fusion-card.closed .brand-dual{font-size:1.3rem;margin-top:0;letter-spacing:-1px}
+    .fusion-card.closed .greeting-row{font-size:1rem}
+    .fusion-card.closed .txt-thin{display:none}
+    .fusion-card.closed .card-body{display:none}
+    .fusion-card.closed .avatar-slot{width:52px;height:52px}
 
-        [data-theme="madrugada"] { --accent-1: #3b82f6; --accent-2: #1d4ed8; --bg-dark: #010206; }
-        [data-theme="manha"] { --accent-1: #f59e0b; --accent-2: #ef4444; --bg-dark: #0f0a05; }
-        [data-theme="tarde"] { --accent-1: #10b981; --accent-2: #3b82f6; --bg-dark: #060a0f; }
-        [data-theme="noite"] { --accent-1: #8b5cf6; --accent-2: #ec4899; --bg-dark: #05020a; }
+    .card-header{display:flex;align-items:center;gap:15px;margin-bottom:18px;cursor:pointer}
+    .avatar-slot{width:64px;height:64px;flex-shrink:0;border-radius:12px;overflow:hidden;opacity:0;transition:opacity 0.35s}
+    .avatar-slot.shown{opacity:1}
+    .avatar-loader{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent}
+    .text-block{flex:1;display:flex;flex-direction:column;justify-content:center}
+    .greeting-row{font-size:1.5rem;line-height:1;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+    .txt-thin{font-weight:200;color:rgba(255,255,255,0.7)}
+    .txt-heavy{font-weight:600;color:#fff}
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text);
-            font-family: 'Outfit', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: background-color 1s var(--ease);
-        }
+    .brand-dual{font-size:2.2rem;font-weight:900;line-height:0.95;text-transform:uppercase;letter-spacing:-2px;margin-top:4px;background:linear-gradient(-45deg,#fff,var(--neon-cyan),var(--neon-purple),#fff);background-size:300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradientFlow 4s ease infinite;}
+    @keyframes gradientFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .clock-widget{text-align:right}
+    .time-display{font-family:var(--font-code);font-size:1rem;color:rgba(255,255,255,0.5);font-weight:700}
+    .status-led{font-size:0.6rem;color:var(--neon-cyan);text-transform:uppercase;letter-spacing:1px;margin-top:4px;display:block}
 
-        .ambient-glow { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-        .blob {
-            position: absolute; width: 80vw; height: 80vw; border-radius: 50%;
-            filter: blur(100px); opacity: 0.12;
-            animation: float 25s infinite alternate ease-in-out;
-            background: var(--grad);
-        }
+    .card-body{display:flex;flex-direction:column;gap:12px}
+    .input-wrapper{position:relative}
+    .cyber-input{width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px 48px 14px 14px;color:#fff;font-family:var(--font-code);font-size:0.95rem;transition:0.2s}
+    .cyber-input:focus{border-color:var(--neon-cyan);box-shadow:0 0 15px rgba(0,242,255,0.08);background:rgba(0,0,0,0.5)}
+    .input-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.3)}
 
-        @keyframes float {
-            0% { transform: translate(-10%, -10%) rotate(0deg); }
-            100% { transform: translate(20%, 20%) rotate(90deg); }
-        }
+    .row{display:flex;gap:10px;align-items:center}
+    .btn{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);cursor:pointer;font-weight:700;color:#fff}
+    .btn.ghost{background:transparent;border:1px dashed rgba(255,255,255,0.06);color:rgba(255,255,255,0.75)}
+    .btn.small{padding:8px 10px;font-size:0.82rem;border-radius:10px}
 
-        .glass {
-            background: var(--glass);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
+    .preview{border:1px dashed rgba(255,255,255,0.05);padding:10px;border-radius:12px;background:rgba(255,255,255,0.02);font-family:var(--font-code);font-size:0.85rem;color:rgba(255,255,255,0.9)}
+    .preview-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:0.82rem;color:rgba(255,255,255,0.6)}
+    .color-chips{display:flex;gap:6px;margin-top:8px;align-items:center}
+    .color-chip{width:22px;height:14px;border-radius:4px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 2px 6px rgba(0,0,0,0.4);flex-shrink:0}
 
-        #splash {
-            position: fixed; inset: 0; z-index: 2000;
-            background: #000; display: flex; align-items: center; justify-content: center;
-        }
-        
-        #manifesto-overlay {
-            position: fixed; inset: 0; z-index: 2100;
-            background: #000; display: none;
-            flex-direction: column; align-items: center; justify-content: center;
-            font-family: 'JetBrains Mono', monospace; padding: 20px;
-        }
+    .stack-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .stack-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03)}
+    .stack-text{flex:1;font-family:var(--font-code);font-size:0.85rem;color:rgba(255,255,255,0.9);word-break:break-word}
+    .stack-meta{display:flex;gap:8px;align-items:center}
 
-        .fractal-canvas { 
-            font-family: 'JetBrains Mono', monospace; 
-            line-height: 1; color: var(--accent-1); 
-            text-shadow: 0 0 10px var(--accent-1);
-        }
+    .badge{background:var(--neon-cyan);color:#000;padding:4px 8px;border-radius:999px;font-weight:700;font-size:0.75rem}
+    .muted{color:rgba(255,255,255,0.45);font-size:0.8rem}
 
-        .collapsible-container { overflow: hidden; margin-bottom: 1.5rem; transition: all 0.5s var(--ease); }
-        .collapsible-trigger { cursor: pointer; padding: 24px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .collapsible-body { max-height: 0; opacity: 0; transition: all 0.5s var(--ease); padding: 0 30px; overflow: hidden; }
-        .is-open .collapsible-body { max-height: 2000px; opacity: 1; padding-bottom: 30px; }
-        .chev { transition: transform 0.4s var(--ease); opacity: 0.3; }
-        .is-open .chev { transform: rotate(180deg); opacity: 1; color: var(--accent-1); }
+    .progress-container{background:rgba(0,0,0,0.2);padding:12px;border-radius:12px}
+    .bar-track{height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin:8px 0}
+    .bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--neon-cyan),var(--neon-purple));box-shadow:0 0 12px var(--neon-cyan);transition:width 1.2s ease-out}
+    .bar-meta{display:flex;justify-content:space-between;font-size:0.6rem;color:rgba(255,255,255,0.4);font-family:var(--font-code)}
 
-        .btn-dual {
-            background: var(--grad);
-            color: #000; font-weight: 800; border-radius: 16px;
-            padding: 14px; width: 100%; transition: all 0.3s var(--ease);
-            text-transform: uppercase; letter-spacing: 1px; font-size: 10px;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: none; cursor: pointer;
-        }
-        .btn-dual:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn-dual:active { transform: scale(0.96); }
-        .btn-outline { background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(255,255,255,0.1); box-shadow: none; }
+    .arctiask{display:block;padding:12px;border-radius:10px;border:2px solid rgba(173,216,230,0.08);font-family:var(--font-code);background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.35));color:#fff;white-space:pre-wrap;}
 
-        .input-dual {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 16px; padding: 16px; width: 100%; color: inherit;
-            transition: all 0.3s;
-        }
-        .input-dual:focus { border-color: var(--accent-1); background: rgba(255,255,255,0.06); box-shadow: 0 0 20px rgba(79, 212, 255, 0.1); }
+    /* small preview visible while closed, wider */
+    .small-preview{display:none;font-size:0.825rem;color:rgba(255,255,255,0.85);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 28px);padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+    .fusion-card.closed .small-preview{display:block}
 
-        .sub-card {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 24px; margin-top: 10px;
-        }
-
-        #toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
-            background: var(--glass); backdrop-filter: blur(20px);
-            padding: 12px 24px; border-radius: 50px; font-weight: 800; font-size: 10px;
-            color: var(--accent-1); text-transform: uppercase; letter-spacing: 2px;
-            transition: 0.5s var(--ease); z-index: 3000; border: 1px solid var(--accent-1);
-        }
-        #toast.active { transform: translateX(-50%) translateY(0); }
-
-        .debate-bubble {
-            border-left: 2px solid var(--accent-1);
-            padding: 8px 12px; margin-bottom: 12px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 0 12px 12px 0;
-            animation: slideIn 0.3s var(--ease) forwards;
-        }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-
-        .dose-card { padding: 16px; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 12px; }
-        .dose-intro { font-weight:900; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:10px; color: var(--accent-1); }
-        .dose-ascii { font-family: 'JetBrains Mono', monospace; font-size:8px; color: var(--accent-1); white-space:pre; margin-bottom:10px; opacity: 0.6; }
-        .dose-body { font-size:13px; margin-bottom:12px; line-height:1.5; opacity:0.9; color: #fff; }
-        .dose-footer { font-size:10px; opacity:0.5; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; border-top: 1px solid rgba(255,255,255,0.05); pt-3 }
-    </style>
+    @media (max-width:420px){ .fusion-card.closed{width:260px} .brand-dual{font-size:1rem} .small-preview{max-width:calc(100% - 20px)} }
+  </style>
 </head>
-<body class="p-4 md:p-12">
+<body>
+  <div class="ambient-light"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
 
-    <div class="ambient-glow" aria-hidden="true">
-        <div class="blob"></div>
-    </div>
-
-    <div id="splash">
-        <div class="max-w-xs w-full text-center px-6">
-            <div class="mb-8 flex justify-center">
-                <div class="w-20 h-20 glass rounded-[28px] flex items-center justify-center border-accent-1/20 border shadow-2xl">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-accent-1">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    </svg>
-                </div>
-            </div>
-            <h2 class="text-3xl font-black mb-2 tracking-tighter uppercase" style="background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Infodose</h2>
-            <p class="text-[9px] font-black tracking-[0.4em] text-white/20 mb-8 uppercase">Neural Interface v2.4.2</p>
-            
-            <input id="user-input" type="text" placeholder="SEU CODINOME" class="input-dual mb-4 text-center font-bold tracking-widest text-xs uppercase" maxlength="12" />
-            <button onclick="app.initActivation()" class="btn-dual" id="btn-sync">Sincronizar Hash</button>
+  <div class="container">
+    <div class="fusion-card closed" id="mainCard" aria-expanded="false">
+      <div class="card-header" id="cardHeader" role="button" tabindex="0" aria-controls="cardBody" aria-expanded="false">
+        <div class="avatar-slot" id="avatarTarget" aria-hidden="true">
+          <div class="avatar-loader" id="avatarLoader" title="Dual ID"></div>
         </div>
+
+        <div class="text-block">
+          <div class="greeting-row">
+            <span class="txt-thin" id="lblHello">Sistema</span>
+            <span class="txt-heavy" id="lblName">Convidado</span>
+          </div>
+          <div class="brand-dual">DUAL</div>
+        </div>
+
+        <div class="clock-widget" aria-hidden="true">
+          <div class="time-display" id="clockTime">00:00</div>
+          <span class="status-led">ONLINE</span>
+        </div>
+      </div>
+
+      <!-- small preview visible when closed -->
+      <div class="small-preview" id="smallPreview">Ativação aparecerá aqui em uma linha</div>
+
+      <div class="card-body" id="cardBody">
+        <div class="input-wrapper">
+          <input type="text" class="cyber-input" id="inputUser" placeholder="Nome para ativação (ex: KODUX)..." autocomplete="off" />
+          <i data-lucide="fingerprint" class="input-icon"></i>
+        </div>
+
+        <div class="row" style="align-items:flex-start;">
+          <div style="flex:1">
+            <div class="preview" id="activationPreview">// Ativação aparecerá aqui após você digitar o nome</div>
+            <div class="preview-meta">
+              <div>ident 369: <strong id="ident369">---</strong> • long: <span id="ident369Long" class="muted">---</span></div>
+              <div class="muted" id="seedValue">seed: ---</div>
+            </div>
+            <div class="color-chips" id="previewChips" aria-hidden="true"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button class="btn small" id="saveActivationBtn">Salvar ativação</button>
+              <button class="btn small ghost" id="copyPreviewBtn">Copiar Arctiask</button>
+              <div style="flex:1"></div>
+              <div id="stackBadge" class="badge" title="Ativações salvas" style="display:none">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden-modules" id="modulesArea">
+          <div class="modules-inner">
+            <div class="progress-container">
+              <div class="bar-meta"><span>CICLO DIÁRIO</span><span id="cyclePercent">0%</span></div>
+              <div class="bar-track"><div class="bar-fill" id="cycleFill"></div></div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <div class="muted">Stack de Ativações</div>
+              <div class="muted">ident 369 (short): <span id="ident369Short">---</span></div>
+            </div>
+
+            <div class="stack-list" id="stackList" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div id="manifesto-overlay">
-        <div id="fractal-art" class="fractal-canvas text-[6px] md:text-[8px] mb-8 leading-[0.8] tracking-tighter"></div>
-        <div id="manifesto-text" class="text-[10px] text-white/40 uppercase tracking-[0.4em] text-center font-mono">CALIBRANDO PULSO...</div>
-    </div>
+<script>
+  lucide.createIcons();
 
-    <div id="main-content" class="max-w-3xl mx-auto opacity-0 translate-y-8 transition-all duration-1000 hidden pb-24">
-        
-        <header class="flex justify-between items-center mb-8 px-2">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-xl border border-accent-1/20 flex items-center justify-center overflow-hidden glass">
-                    <div id="header-fractal" class="text-[3px] fractal-canvas"></div>
-                </div>
-                <span class="text-[10px] font-black tracking-[0.5em] text-white/20 uppercase">Dual.Infodose // Masterclass</span>
-            </div>
-            <div id="clock" class="font-mono text-xl font-bold opacity-40">00:00</div>
-        </header>
+  const els = {
+    card: document.getElementById('mainCard'),
+    header: document.getElementById('cardHeader'),
+    avatarLoader: document.getElementById('avatarLoader'),
+    avatarTgt: document.getElementById('avatarTarget'),
+    input: document.getElementById('inputUser'),
+    lblHello: document.getElementById('lblHello'),
+    lblName: document.getElementById('lblName'),
+    clock: document.getElementById('clockTime'),
+    activationPreview: document.getElementById('activationPreview'),
+    smallPreview: document.getElementById('smallPreview'),
+    saveBtn: document.getElementById('saveActivationBtn'),
+    copyBtn: document.getElementById('copyPreviewBtn'),
+    stackList: document.getElementById('stackList'),
+    stackBadge: document.getElementById('stackBadge'),
+    cycleFill: document.getElementById('cycleFill'),
+    cyclePercent: document.getElementById('cyclePercent'),
+    ident369: document.getElementById('ident369'),
+    ident369LongEl: document.getElementById('ident369Long'),
+    previewChips: document.getElementById('previewChips'),
+    seedValue: document.getElementById('seedValue'),
+    ident369Short: document.getElementById('ident369Short')
+  };
 
-        <section id="user-stack" class="glass rounded-[40px] collapsible-container is-open">
-            <div class="collapsible-trigger" onclick="app.toggle('user-stack')">
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-2 mb-1">
-                        <div class="w-2 h-2 rounded-full bg-accent-1 shadow-[0_0_10px_var(--accent-1)] animate-pulse"></div>
-                        <span class="text-[9px] font-black text-white/40 uppercase tracking-widest">Protocolo Ativo</span>
-                    </div>
-                    <h1 class="text-2xl font-black tracking-tighter uppercase" style="font-family:'Montserrat'">
-                        <span id="display-name" style="background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">USER</span> INFODOSE
-                    </h1>
-                </div>
-                <svg class="chev w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-            
-            <div class="collapsible-body">
-                <div class="sub-card p-6 mb-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-accent-1">Fluxo de Ativação</span>
-                        <button onclick="app.toggleFractalAnim()" class="p-2 bg-white/5 rounded-lg text-white/40 hover:text-white" id="btn-play">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                        </button>
-                    </div>
-                    <div id="flow-content" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="app.startFlow('personalize')" class="btn-dual btn-outline">Personalizar</button>
-                            <button onclick="app.startFlow('archetypes')" class="btn-dual btn-outline">Arquétipos</button>
-                        </div>
-                    </div>
-                </div>
+  // 24 frases (exemplos)
+  const PHRASES_24 = [
+    "Ativar foco estável.","Sintonizar ritmo criativo.","Amplificar percepção sutil.","Conectar ao core de coesão.","Iniciar limpeza cognitiva.","Engatar modo produtividade.","Equilibrar fluxo emocional.","Elevar nível de curiosidade.","Refinar intenção principal.","Fortalecer memória ativa.","Sincronizar com ciclo terrestre.","Ativar shield de atenção.","Optimizar caminhos de decisão.","Despertar intuição prática.","Atenuar ruídos internos.","Mapear prioridades do dia.","Habilitar modo aprendizado.","Sintonizar voz interior clara.","Aumentar resiliência mental.","Abrir canal de insights.","Energetizar campo criativo.","Ancorar objetivos curtos.","Preparar para execução suave.","Concluir com gratidão."
+  ];
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-6 sub-card">
-                        <label class="text-[9px] font-black text-white/20 uppercase tracking-widest block mb-4">Ciclo de Interface</label>
-                        <div class="flex gap-3 mb-4">
-                            <div onclick="app.setTheme('madrugada')" class="w-8 h-8 rounded-full bg-blue-600 cursor-pointer border-2 border-transparent hover:border-white transition-all shadow-lg"></div>
-                            <div onclick="app.setTheme('manha')" class="w-8 h-8 rounded-full bg-amber-500 cursor-pointer border-2 border-transparent hover:border-white transition-all shadow-lg"></div>
-                            <div onclick="app.setTheme('tarde')" class="w-8 h-8 rounded-full bg-emerald-500 cursor-pointer border-2 border-transparent hover:border-white transition-all shadow-lg"></div>
-                            <div onclick="app.setTheme('noite')" class="w-8 h-8 rounded-full bg-purple-600 cursor-pointer border-2 border-transparent hover:border-white transition-all shadow-lg"></div>
-                        </div>
-                    </div>
-                    <div class="p-6 sub-card flex flex-col justify-center">
-                        <span class="text-[9px] font-black text-white/20 uppercase tracking-widest block mb-4">Extração Fractal</span>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="app.copyFractal()" class="p-3 bg-white/5 rounded-xl text-[9px] uppercase font-bold hover:bg-white/10 transition-colors">Copiar Arte</button>
-                            <button onclick="app.copyFrames()" class="p-3 bg-white/5 rounded-xl text-[9px] uppercase font-bold hover:bg-white/10 transition-colors">Exportar Frames</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+  // helpers: deterministic hash
+  function hashString(str){
+    let h = 2166136261 >>> 0;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h >>> 0;
+  }
 
-        <section id="transform-stack" class="glass rounded-[35px] collapsible-container">
-            <div class="collapsible-trigger" onclick="app.toggle('transform-stack')">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    </div>
-                    <span class="text-xs font-black uppercase tracking-[0.2em]">Painel de Síntese</span>
-                </div>
-                <svg class="chev w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-            <div class="collapsible-body">
-                <textarea id="main-input" class="input-dual min-h-[120px] mb-4 font-mono text-xs placeholder:opacity-20 resize-none" placeholder="ENTRADA DE DADOS PARA SINTETIZAR..."></textarea>
-                <button onclick="app.process()" class="btn-dual" id="btn-sintetizar">Gerar Infodose</button>
-                <p class="text-[9px] text-white/20 mt-3 text-center uppercase tracking-widest">Aperte <span class="text-accent-1">Enter</span> para processar rápido</p>
-            </div>
-        </section>
+  // make short 3-digit (original) and expanded 9-digit 3/6/9 mapping
+  function make369Short(name){
+    name = (name||'').toUpperCase().replace(/[^A-Z]/g,'');
+    if(!name) return '---';
+    let out='';
+    for(let i=0;i<3;i++){
+      const ch = name[i] || name[i % name.length];
+      const v = (ch.charCodeAt(0) || 65) % 3;
+      out += (v === 0 ? '3' : (v === 1 ? '6' : '9'));
+    }
+    return out;
+  }
+  function make369Long(name, length = 9){
+    name = (name||'').toUpperCase().replace(/[^A-Z]/g,'');
+    if(!name) return '---------';
+    let out='';
+    for(let i=0;i<length;i++){
+      const ch = name[i] || name[i % name.length];
+      const v = (ch.charCodeAt(0) || 65) % 3;
+      out += (v === 0 ? '3' : (v === 1 ? '6' : '9'));
+    }
+    return out;
+  }
 
-        <section id="history-stack" class="glass rounded-[35px] collapsible-container">
-            <div class="collapsible-trigger" onclick="app.toggle('history-stack')">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20v-6M9 20v-10M6 20v-4M15 20v-8M18 20v-12"/></svg>
-                    </div>
-                    <span class="text-xs font-black uppercase tracking-[0.2em]">Fluxo de Memória</span>
-                </div>
-                <svg class="chev w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-            <div class="collapsible-body">
-                <div id="output-stream" class="space-y-4">
-                    <div class="text-center py-10 opacity-10 text-[10px] font-black uppercase tracking-widest">Interface Limpa</div>
-                </div>
-            </div>
-        </section>
+  // legacy colors generation (n colors) from seed
+  function legacyColors(seed, n = 6){
+    const arr = [];
+    const s = Number(seed) >>> 0;
+    for(let i=0;i<n;i++){
+      const hue = (s + i * 47) % 360;
+      const sat = 72 + ((s >> (i % 8)) & 15) % 18;
+      const light = 42 + (i * 6) % 18;
+      arr.push(`hsl(${hue} ${sat}% ${light}%)`);
+    }
+    return arr;
+  }
 
-    </div>
+  // gradient helper from palette
+  function paletteToGradient(palette){
+    if(!palette || palette.length===0) return 'linear-gradient(135deg,#00f2ff,#bd00ff)';
+    if(palette.length===1) return `linear-gradient(135deg, ${palette[0]}, ${palette[0]})`;
+    return `linear-gradient(135deg, ${palette[0]}, ${palette[Math.min(2,palette.length-1)]})`;
+  }
 
-    <div id="toast">Notificação</div>
+  // generate activation (now with identLong + legacyColors) and use "DUAL"
+  function generateActivation(name){
+    name = (name||'').trim();
+    if(!name) return {text:'// Digite um nome para gerar ativação', arctiask:'', ident:'---', identLong:'---------', seed:0, palette:[], phrase:''};
+    const now = new Date();
+    const idx = now.getHours() % PHRASES_24.length;
+    const phrase = PHRASES_24[idx];
+    const ident = make369Short(name);
+    const identLong = make369Long(name, 9);
+    const seed = hashString(name);
+    const palette = legacyColors(seed, 6);
+    const activationText = `DUAL Infodose — Ativação: ${name}\nID: ${ident}\nID_LONG: ${identLong}\nFrase: ${phrase}\n\nAtive com presença: “${phrase}”\n— DUAL`;
+    const chipsHTML = palette.map(c => `<span style="display:inline-block;width:14px;height:12px;border-radius:3px;margin-right:6px;background:${c};border:1px solid rgba(0,0,0,0.2)"></span>`).join('');
+    const arctiaskHTML = `
+      <div style="font-family:JetBrains Mono,monospace;padding:12px;border-radius:10px;border:2px solid rgba(173,216,230,0.08);background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.35));color:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong>DUAL Infodose</strong><br><small>${name} · id ${ident}</small></div>
+          <div style="display:flex;align-items:center">${chipsHTML}</div>
+        </div>
+        <pre style="margin-top:8px;white-space:pre-wrap">${phrase}</pre>
+      </div>`;
+    return {text:activationText, arctiask:arctiaskHTML, ident, identLong, seed, palette, phrase};
+  }
 
-    <script>
-        const app = (() => {
-            const els = {
-                splash: document.getElementById('splash'),
-                manifesto: document.getElementById('manifesto-overlay'),
-                fractalArt: document.getElementById('fractal-art'),
-                manifestoText: document.getElementById('manifesto-text'),
-                userInput: document.getElementById('user-input'),
-                mainContent: document.getElementById('main-content'),
-                displayName: document.getElementById('display-name'),
-                clock: document.getElementById('clock'),
-                toast: document.getElementById('toast'),
-                input: document.getElementById('main-input'),
-                stream: document.getElementById('output-stream'),
-                flow: document.getElementById('flow-content'),
-                btnPlay: document.getElementById('btn-play'),
-                headerFractal: document.getElementById('header-fractal')
-            };
+  // Stack storage
+  const STORAGE_KEY = 'dual_infodose_stack_v1';
+  function loadStack(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){return [];} }
+  function saveStack(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); renderStack(); }
 
-            const state = {
-                user: '',
-                hash: 0,
-                history: JSON.parse(localStorage.getItem('dual_mem_v242') || '[]'),
-                isAnimating: false,
-                frame: 0,
-                animTimer: null,
-                debateActive: false
-            };
+  function renderColorChipsInline(parent, palette){
+    parent.innerHTML = '';
+    if(!palette || palette.length===0) return;
+    palette.forEach(c => {
+      const chip = document.createElement('div');
+      chip.className = 'color-chip';
+      chip.style.background = c;
+      parent.appendChild(chip);
+    });
+  }
 
-            const archetypes = [
-                { name: "O Criador", pitch: 1.2, rate: 1.1 },
-                { name: "O Mentor", pitch: 0.9, rate: 0.8 },
-                { name: "O Explorador", pitch: 1.1, rate: 1.3 },
-                { name: "O Guerreiro", pitch: 0.7, rate: 1.0 },
-                { name: "O Mago", pitch: 0.5, rate: 0.7 },
-                { name: "O Amante", pitch: 1.3, rate: 0.9 },
-                { name: "O Tolo", pitch: 1.5, rate: 1.4 },
-                { name: "O Cuidador", pitch: 1.0, rate: 0.8 },
-                { name: "O Governante", pitch: 0.8, rate: 0.9 },
-                { name: "O Inocente", pitch: 1.4, rate: 1.1 },
-                { name: "O Órfão", pitch: 0.9, rate: 1.0 },
-                { name: "O Rebelde", pitch: 0.6, rate: 1.2 }
-            ];
+  function renderStack(){
+    const stack = loadStack();
+    els.stackList.innerHTML = '';
+    if(stack.length === 0){ els.stackList.innerHTML = '<div class="muted">Nenhuma ativação salva — gere e salve uma.</div>'; els.stackBadge.style.display='none'; return; }
+    els.stackBadge.style.display='inline-block'; els.stackBadge.innerText = stack.length;
+    stack.slice().reverse().forEach((s,i)=>{
+      const el = document.createElement('div'); el.className='stack-item';
+      const txt = document.createElement('div'); txt.className='stack-text';
+      txt.innerHTML = `<div style="font-weight:700">${s.name}</div><div style="font-size:0.78rem;color:rgba(255,255,255,0.75);margin-top:6px">${s.phrase}</div>`;
+      const meta = document.createElement('div'); meta.className='stack-meta';
+      const chipsWrap = document.createElement('div'); chipsWrap.style.display='flex'; chipsWrap.style.gap='6px'; chipsWrap.style.marginRight='6px';
+      s.palette.forEach(c => {
+        const chip = document.createElement('div'); chip.className='color-chip'; chip.style.background = c; chipsWrap.appendChild(chip);
+      });
+      const useBtn = document.createElement('button'); useBtn.className='btn small'; useBtn.innerText='Ativar'; useBtn.onclick = ()=> applyActivation(s);
+      const copyBtn = document.createElement('button'); copyBtn.className='btn small ghost'; copyBtn.innerText='Copiar'; copyBtn.onclick = ()=> copyArctiask(s.arctiask, s.text);
+      const delBtn = document.createElement('button'); delBtn.className='btn small ghost'; delBtn.innerText='Remover'; delBtn.onclick = ()=> { removeStackItem(stack.length-1-i); };
+      meta.appendChild(chipsWrap); meta.appendChild(useBtn); meta.appendChild(copyBtn); meta.appendChild(delBtn);
+      el.appendChild(txt); el.appendChild(meta); els.stackList.appendChild(el);
+    });
+  }
 
-            const generateHash = (str) => {
-                let hash = 0;
-                for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                return Math.abs(hash);
-            };
+  function addToStack(item){
+    const stack = loadStack();
+    stack.push(item);
+    saveStack(stack);
+  }
+  function removeStackItem(idx){
+    const stack = loadStack();
+    stack.splice(idx,1);
+    saveStack(stack);
+  }
 
-            const getFractal = (seed, frame) => {
-                const rules = { X: "F[+X][-X]FX", Y: "F-X+F" };
-                let axiom = (seed % 2 === 0) ? "X" : "Y";
-                for(let i=0; i<3; i++) axiom = axiom.split('').map(c => rules[c] || c).join('').substring(0, 50);
-                
-                let render = "";
-                for(let y=0; y<12; y++) {
-                    for(let x=0; x<24; x++) {
-                        const idx = (x + y + frame) % axiom.length;
-                        const char = axiom[idx];
-                        if (char === 'F') render += "█";
-                        else if (char === '+') render += "/";
-                        else if (char === '-') render += "\\";
-                        else render += " ";
-                    }
-                    render += "\n";
-                }
-                return render;
-            };
+  // copy utilities
+  async function copyArctiask(html, text){
+    try {
+      if(navigator.clipboard && window.ClipboardItem){
+        const blobInput = new Blob([html], {type: "text/html"});
+        const blobText  = new Blob([text], {type: "text/plain"});
+        await navigator.clipboard.write([ new ClipboardItem({ "text/html": blobInput, "text/plain": blobText }) ]);
+        toast('Arctiask copiado (HTML+Texto)');
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast('Texto copiado (HTML não suportado)');
+      }
+    } catch(e){
+      try { await navigator.clipboard.writeText(text); toast('Texto copiado'); }
+      catch(_) { alert('Não foi possível copiar — navegador bloqueou o clipboard.'); }
+    }
+  }
 
-            const formatDose = (text) => {
-                const intro = text.split(/[.!?]/)[0].substring(0, 96);
-                const ascii = `◎─${"✦".repeat(5)}─◎\n${"• ".repeat(8)}`;
-                return `
-                    <div class="dose-card">
-                        <pre class="dose-ascii">${ascii}</pre>
-                        <span class="dose-intro">${intro}</span>
-                        <p class="dose-body">${text}</p>
-                        <div class="dose-footer">Sincronizado com o pulso de ${state.user}</div>
-                    </div>
-                `;
-            };
+  function applyActivation(item){
+    setLoaderStyleFromPalette(item.palette);
+    toast('Ativação aplicada: ' + (item.phrase || '...'));
+  }
 
-            const speak = (txt, arch = null) => {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(txt);
-                u.lang = 'pt-BR';
-                if(arch) { u.pitch = arch.pitch; u.rate = arch.rate; }
-                window.speechSynthesis.speak(u);
-            };
+  function toast(t){
+    const id='__toast__';
+    let el = document.getElementById(id);
+    if(!el){ el=document.createElement('div'); el.id=id; el.style.position='fixed'; el.style.bottom='22px'; el.style.right='22px'; el.style.background='rgba(0,0,0,0.6)'; el.style.padding='10px 14px'; el.style.borderRadius='10px'; el.style.fontFamily='JetBrains Mono,monospace'; el.style.zIndex=9999; document.body.appendChild(el); }
+    el.innerText = t; el.style.opacity='1';
+    setTimeout(()=> el.style.opacity='0', 2200);
+  }
 
-            return {
-                initActivation: () => {
-                    state.user = els.userInput.value.trim().toUpperCase() || 'NEBULA';
-                    state.hash = generateHash(state.user);
-                    els.splash.style.display = 'none';
-                    els.manifesto.style.display = 'flex';
+  // loader: set gradient from palette or fallback
+  function setLoaderStyleFromPalette(palette){
+    const gradient = paletteToGradient(palette);
+    const color = palette && palette.length? palette[0] : '#00f2ff';
+    els.avatarLoader.style.background = gradient;
+    els.avatarLoader.innerHTML = `<svg width="42" height="42" viewBox="0 0 50 50" role="img" aria-hidden="true"><defs>
+      <linearGradient id="gLoaderLocal" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${palette[0] || color}"/><stop offset="1" stop-color="${palette[1] || '#fff'}"/>
+      </linearGradient></defs>
+      <circle cx="25" cy="25" r="10" stroke="url(#gLoaderLocal)" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="60" stroke-dashoffset="30">
+        <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 25 25" to="360 25 25" dur="1.6s" repeatCount="indefinite"/>
+      </circle></svg>`;
+  }
 
-                    let count = 0;
-                    const interval = setInterval(() => {
-                        els.fractalArt.innerText = getFractal(state.hash, count++);
-                        els.manifestoText.innerText = `SYNCING HASH: ${state.hash.toString(16)}... ${Math.min(99, count * 4)}%`;
-                        if(count > 25) {
-                            clearInterval(interval);
-                            app.finalizeActivation();
-                        }
-                    }, 60);
-                },
+  // update preview & ident & loader on name change / blur
+  function updatePreviewFromName(name){
+    const gen = generateActivation(name);
+    els.activationPreview.innerText = gen.text;
+    els.smallPreview.innerText = `${gen.name || name ? (name.trim() ? name.trim() + ' · ' : '') : ''}${gen.phrase || ''}`.trim(); // compact one-line preview
+    els.ident369.innerText = gen.ident;
+    els.ident369LongEl.innerText = gen.identLong;
+    els.ident369Short.innerText = gen.ident;
+    els.seedValue.innerText = `seed: ${gen.seed}`;
+    renderColorChipsInline(els.previewChips, gen.palette);
+    setLoaderStyleFromPalette(gen.palette);
+    els._lastPreview = gen;
+  }
 
-                finalizeActivation: () => {
-                    els.manifesto.style.opacity = '0';
-                    setTimeout(() => {
-                        els.manifesto.style.display = 'none';
-                        els.mainContent.classList.remove('hidden');
-                        setTimeout(() => els.mainContent.classList.add('opacity-100', 'translate-y-0'), 50);
-                        els.displayName.innerText = state.user;
-                        els.headerFractal.innerText = getFractal(state.hash, 0);
-                        app.updateThemeByTime();
-                        speak(`Bem-vindo, ${state.user}.`);
-                    }, 500);
-                },
+  // input handlers
+  els.input.addEventListener('input',(e)=>{
+    const v = e.target.value;
+    if(v){ els.lblHello.innerText='Oi,'; els.lblName.innerText=v; }
+    else { els.lblHello.innerText='Sistema'; els.lblName.innerText='Convidado'; }
+    updatePreviewFromName(v);
+  });
+  els.input.addEventListener('blur',(e)=>{
+    const v = e.target.value.trim();
+    if(v){ localStorage.setItem('fusion_user', v); toast(`Usuário ${v} salvo.`); }
+    updatePreviewFromName(v);
+  });
 
-                startFlow: (type) => {
-                    if(type === 'personalize') {
-                        app.renderStep("ESTADO", ["Foco Total", "Exploração", "Calma", "Caos"], (val) => {
-                            app.notify(`Filtro: ${val}`);
-                            app.startFlow('main');
-                        });
-                    } else if(type === 'archetypes') {
-                        app.runDebate();
-                    } else {
-                        els.flow.innerHTML = `
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="app.startFlow('personalize')" class="btn-dual btn-outline">Personalizar</button>
-                                <button onclick="app.startFlow('archetypes')" class="btn-dual btn-outline">Arquétipos</button>
-                            </div>
-                        `;
-                    }
-                },
+  // Save activation
+  els.saveBtn.addEventListener('click', ()=>{
+    const gen = els._lastPreview || generateActivation(els.input.value);
+    if(!els.input.value.trim()){ toast('Digite um nome primeiro'); return; }
+    const item = {
+      id: Date.now(),
+      name: els.input.value.trim(),
+      text: gen.text,
+      arctiask: gen.arctiask,
+      ident: gen.ident,
+      identLong: gen.identLong,
+      seed: gen.seed,
+      palette: gen.palette,
+      phrase: gen.phrase
+    };
+    addToStack(item);
+    toast('Ativação salva no stack');
+  });
 
-                renderStep: (title, opts, callback) => {
-                    els.flow.innerHTML = `
-                        <p class="text-[9px] font-black uppercase tracking-widest text-accent-1 mb-3">${title}</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            ${opts.map(o => `<button class="btn-dual !py-2 btn-outline" onclick="this.parentElement.innerHTML=''; app.startFlow('main')">${o}</button>`).join('')}
-                        </div>
-                    `;
-                },
+  // copy preview
+  els.copyBtn.addEventListener('click', async ()=> {
+    const gen = els._lastPreview || generateActivation(els.input.value);
+    if(!els.input.value.trim()){ toast('Digite um nome primeiro'); return; }
+    await copyArctiask(gen.arctiask, gen.text);
+  });
 
-                runDebate: () => {
-                    state.debateActive = true;
-                    els.flow.innerHTML = `<div id="debate-ui" class="max-h-[150px] overflow-y-auto text-[10px] space-y-2 mb-4"></div>
-                                         <button onclick="app.startFlow('main')" class="btn-dual btn-outline">Parar Debate</button>`;
-                    const debateUi = document.getElementById('debate-ui');
-                    const scripts = [
-                        { a: archetypes[4], t: "A realidade é maleável." },
-                        { a: archetypes[3], t: "Execute com força!" },
-                        { a: archetypes[1], t: "A paciência gera mestria." }
-                    ];
-                    let i = 0;
-                    const next = () => {
-                        if(!state.debateActive || i >= scripts.length) return;
-                        const line = scripts[i++];
-                        const div = document.createElement('div');
-                        div.className = "debate-bubble";
-                        div.innerHTML = `<span class="font-black text-accent-1">${line.a.name}:</span> ${line.t}`;
-                        debateUi.appendChild(div);
-                        speak(line.t, line.a);
-                        setTimeout(next, 3000);
-                    };
-                    next();
-                },
+  // init
+  document.addEventListener('DOMContentLoaded', ()=>{
+    setTimeout(()=> {
+      els.card.classList.add('active'); els.avatarTgt.classList.add('shown'); els.card.classList.add('closed');
+      const saved = localStorage.getItem('fusion_user');
+      if(saved){ els.input.value = saved; setTimeout(()=> { els.input.dispatchEvent(new Event('input')); }, 40); }
+      renderStack();
+      updatePreviewFromName(els.input.value || '');
+      els.card.setAttribute('aria-expanded','false'); els.header.setAttribute('aria-expanded','false');
+    },120);
+  });
 
-                process: () => {
-                    const val = els.input.value.trim();
-                    if(!val) return app.notify("Entrada Vazia");
-                    const html = formatDose(val);
-                    state.history.unshift({html, time: new Date().toLocaleTimeString()});
-                    state.history = state.history.slice(0, 10);
-                    localStorage.setItem('dual_mem_v242', JSON.stringify(state.history));
-                    els.input.value = '';
-                    app.renderHistory();
-                    app.notify("Dose Gerada");
-                },
+  // clock & cycle
+  function updateMetrics(){
+    const now = new Date();
+    els.clock.innerText = now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const start = 0, end = 24;
+    const current = now.getHours() + (now.getMinutes()/60);
+    let pct = ((current - start)/(end - start)) * 100;
+    pct = Math.max(0, Math.min(100, pct));
+    els.cycleFill.style.width = `${pct}%`;
+    els.cyclePercent.innerText = `${Math.floor(pct)}%`;
+  }
+  setInterval(updateMetrics,1000); updateMetrics();
 
-                renderHistory: () => {
-                    els.stream.innerHTML = state.history.map(h => h.html).join('');
-                },
+  // Morph toggle (kept from previous) — updated closed width to 320px
+  const morph = {
+    closed: { width: '320px', padding: '14px 16px', borderRadius: '22px', boxShadow: '0 22px 70px rgba(0,0,0,0.75)', scale: 0.995 },
+    open:   { width: '520px', padding: '30px 25px', borderRadius: '36px', boxShadow: '0 40px 100px rgba(0,0,0,0.8)', scale: 1 },
+    duration: 520, easing: 'cubic-bezier(0.22,1,0.36,1)'
+  };
 
-                toggleFractalAnim: () => {
-                    state.isAnimating = !state.isAnimating;
-                    if(state.isAnimating) {
-                        const loop = () => {
-                            if(!state.isAnimating) return;
-                            els.headerFractal.innerText = getFractal(state.hash, state.frame++);
-                            state.animTimer = setTimeout(loop, 100);
-                        };
-                        loop();
-                    } else {
-                        clearTimeout(state.animTimer);
-                    }
-                },
+  function toggleCard() {
+    const isClosed = els.card.classList.contains('closed');
+    if(els.card.classList.contains('animating')) return;
+    const from = isClosed ? morph.closed : morph.open;
+    const to   = isClosed ? morph.open : morph.closed;
+    els.card.classList.add('animating');
+    els.card.style.width = from.width; els.card.style.padding = from.padding; els.card.style.borderRadius = from.borderRadius; els.card.style.boxShadow = from.boxShadow; els.card.style.transform = `scale(${from.scale})`;
+    const keyframes = [{ width: from.width, padding: from.padding, borderRadius: from.borderRadius, boxShadow: from.boxShadow, transform: `scale(${from.scale})` },{ width: to.width, padding: to.padding, borderRadius: to.borderRadius, boxShadow: to.boxShadow, transform: `scale(${to.scale})` }];
+    const anim = els.card.animate(keyframes, { duration: morph.duration, easing: morph.easing, fill: 'forwards' });
+    if(isClosed){
+      setTimeout(()=> { els.card.classList.remove('closed'); els.card.setAttribute('aria-expanded','true'); els.header.setAttribute('aria-expanded','true'); }, Math.round(morph.duration * 0.45));
+    } else {
+      setTimeout(()=> { els.card.classList.add('closed'); els.card.setAttribute('aria-expanded','false'); els.header.setAttribute('aria-expanded','false'); }, Math.round(morph.duration * 0.7));
+    }
+    anim.onfinish = ()=> { els.card.style.width=''; els.card.style.padding=''; els.card.style.borderRadius=''; els.card.style.boxShadow=''; els.card.style.transform=''; setTimeout(()=> els.card.classList.remove('animating'), 30); if(isClosed) setTimeout(()=> els.input.focus(), 40); };
+  }
 
-                setTheme: (m) => {
-                    document.documentElement.setAttribute('data-theme', m);
-                    localStorage.setItem('dual_theme_v242', m);
-                    app.notify(`Tema: ${m}`);
-                },
+  els.header.addEventListener('click',(e)=> toggleCard());
+  els.header.addEventListener('keydown',(e)=> { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCard(); } });
 
-                updateThemeByTime: () => {
-                    const h = new Date().getHours();
-                    if(h < 6) app.setTheme('madrugada');
-                    else if(h < 12) app.setTheme('manha');
-                    else if(h < 18) app.setTheme('tarde');
-                    else app.setTheme('noite');
-                },
-
-                toggle: (id) => document.getElementById(id).classList.toggle('is-open'),
-                notify: (msg) => {
-                    els.toast.innerText = msg;
-                    els.toast.classList.add('active');
-                    setTimeout(() => els.toast.classList.remove('active'), 2000);
-                },
-                copyFractal: () => {
-                    navigator.clipboard.writeText(getFractal(state.hash, state.frame));
-                    app.notify("Arte Copiada");
-                },
-                copyFrames: () => {
-                    app.notify("Frames Exportados");
-                }
-            };
-        })();
-
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
-        }, 1000);
-
-        document.getElementById('main-input').addEventListener('keydown', (e) => {
-            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); app.process(); }
-        });
-
-        window.onload = () => {
-            const saved = JSON.parse(localStorage.getItem('dual_mem_v242') || '[]');
-            if(saved.length) {
-                document.getElementById('output-stream').innerHTML = saved.map(s => s.html || '').join('');
-            }
-        };
-    </script>
+  // quick open modules on dblclick
+  els.header.addEventListener('dblclick', ()=> {
+    els.card.classList.add('open');
+    lucide.createIcons();
+  });
+</script>
 </body>
 </html>
