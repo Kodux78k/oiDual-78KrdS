@@ -10,6 +10,16 @@
 <body>
   <main id="appRoot" style="min-height:100vh;"></main>
 
+<!-- mantenha os scripts externos -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- importe o módulo -->
+<script type="module">
+  import initDualVault from './dual-vault.mjs';
+  // monta dentro do body (padrão)
+  initDualVault(document.body);
+</script>
   <script type="module">
     import { mountFusionCard, unmountFusionCard } from './fusion-card.mjs';
 
